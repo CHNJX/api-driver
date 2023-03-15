@@ -1,0 +1,52 @@
+swagger: '2.0'
+info:
+  version: '1.0.0'
+  title: Sample API
+  description: A sample API for demonstration purposes
+  contact:
+    name: Your Name
+    email: youremail@example.com
+host: api.example.com
+basePath: /v1
+schemes:
+  - http
+tags:
+  - name: users
+    description: Operations related to users
+paths:
+  '/users':
+    get:
+      tags:
+        - users
+      summary: Get a list of users
+      description: Returns a list of all users in the system
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: Successful operation
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/User'
+        default:
+          description: Error response
+          schema:
+            $ref: '#/definitions/Error'
+  '/users/{userId}':
+    get:
+      tags:
+        - users
+      summary: Get a user by ID
+      description: Returns the user with the specified ID
+      produces:
+        - application/json
+      parameters:
+        - name: userId
+          in: path
+          description: The ID of the user to retrieve
+          required: true
+          type: integer
+      responses:
+        '200':
+          description:
