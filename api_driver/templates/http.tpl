@@ -2,7 +2,7 @@ import requests
 
 import os
 
-from service_driver.utils.service_logger import Logger
+from api_driver.utils.service_logger import Logger
 
 
 class Http:
