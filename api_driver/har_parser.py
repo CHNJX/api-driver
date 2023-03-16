@@ -47,7 +47,7 @@ class HarParser:
 
     def __init__(self, har_file_path: str, exclude_url: str = None, api_object: str = None):
         if '/' not in har_file_path and '\\' not in har_file_path:
-            har_file_path = 'swagger/' + har_file_path
+            har_file_path = 'har/' + har_file_path
         self.har_file = har_file_path
         self.exclude_url = exclude_url or ""
         self.api_class = ''
