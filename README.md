@@ -1,6 +1,4 @@
 # api-driver
-- github:
-https://github.com/CHNJX/api-driver
 ### 项目介绍
   - api-driver是一个的接口测试框架，项目架构采取了api-object设计模式，将用例和接口定义进行分离
   - 设计初衷：
