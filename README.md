@@ -11,7 +11,6 @@
       4. 快速运行并集成测试报告
       
 ### 安装
-  - 目前最新版本为0.5.5
   ```shell
   pip install apidriver
   ```
