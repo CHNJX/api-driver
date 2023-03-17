@@ -11,6 +11,7 @@
       4. 快速运行并集成测试报告
       
 ### 安装
+  - 目前最新版本为0.5.5
   ```shell
   pip install apidriver
   ```
@@ -85,6 +86,26 @@ adf har2case -h har_file_dir -e "png|js|css"
 adf har2case -h har_file_dir -a api_object
 api_object目录下查找是否存在har对应api类并生成api-object模式的测试用例
 ```
+api使用
+```python
+# 占位符替换
+# 占位符使用${random(num)} 或 ${random(num1,num2)} 前面是生成字符串，后面的是生成范围内的数字
+from api_driver.testcase_mixin import TestcaseMixin
+# 替换字典中的占位符
+TestcaseMixin().replace_formal_dict_2_actual(data_dict)
+# 替换列表中的占位符
+TestcaseMixin().replace_formal_list_2_actual(data_list)
+# 替换字符串的占位符
+TestcaseMixin().replace_formal_str_2_actual(data)
+
+# 进行json_schema的校验
+TestcaseMixin().assert_schema(res,schema_file_dir,schema_file)
+
+# 假数据生成
+from api_driver.utils.fake import Fake
+Fake # 提供了丰富的假数据生成方法 
+```
+
 ### 后续优化
 1. 往基于模型测试的设计模式方向优化
 2. 实现swagger导入生成基本测试用例
