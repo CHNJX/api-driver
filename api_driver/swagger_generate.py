@@ -15,10 +15,17 @@ from api_driver.tenplate import Template
 from api_driver import ad_utils
 
 
+HTTP_METHODS = {
+            'get': 'get',
+            'post': 'post',
+            'put': 'put',
+            'delete': 'delete'
+        }
+
 class SwaggerGenerator:
     swagger_data = None
 
-    def generate(self, swagger_doc, api_dir=None):
+    def generate(self, swagger_doc: str, api_dir: str = None):
         """
         将swagger 装换成api-object
         :param swagger_doc: swagger文档
@@ -35,7 +42,7 @@ class SwaggerGenerator:
         template = Template()
         for tag, paths in tag_path_dict.items():
             content = template.get_content('api.tpl', tag=tag, paths=paths)
-            file_path = os.path.join(api_dir, tag.lower() + '.py')
+            file_path = f"{api_dir}/{tag.lower()}.py"
             ad_utils.write(content, file_path)
 
     def _get_http_method(self, value: dict) -> str:
@@ -44,28 +51,56 @@ class SwaggerGenerator:
         :param value: get:{} or post:{} or put:{} ...
         :return: request method: get/post/put/delete...
         """
-        method_map = {
-            'get': 'get',
-            'post': 'post',
-            'put': 'put',
-            'delete': 'delete'
-        }
+        method_map = HTTP_METHODS
         for method, attribute in method_map.items():
             if value.get(method):
                 return attribute
         return ''
 
-    def _transformation_parameters(self, parameters) -> list:
+    def _transformation_parameters(self, parameters: dict) -> list:
         """
-        parameters dict => parameters list
+        :param parameters  [{
+            "name": "orgCode",
+            "in": "query",
+            "required": true,
+            "description": "项目编码",
+            "type": "string"
+          }
+        ],
+        :return:  [{
+            "name": "orgCode",
+            "in": "query",
+            "required": true,
+            "description": "项目编码",
+            "type": "string"
+          }
+        ],
         """
         return [param for param in parameters if
                 param['name'] not in ('raw', 'root') and param['in'] == 'query']
 
     # 转换json参数
-    def _transformation_data(self, parameters) -> list:
+    def _transformation_data(self, parameters: dict) -> list:
         """
         将json参数装换成json参数名称列表
+
+        :param parameters  [  "name": "root",
+            "in": "body",
+            "schema": {
+              "$schema": "http://json-schema.org/draft-04/schema#",
+              "type": "object",
+              "properties": {
+                "status": {
+                  "type": "number",
+                  "description": "状态【0：停用；1：正常】"
+                }
+              },
+              "required": [
+                "status"
+              ]
+            }
+          }
+        ],
         :return: [param1，param2...]
         """
         data_list = []
@@ -80,8 +115,29 @@ class SwaggerGenerator:
 
         return data_list
 
-    def _transformation_file(self, parameters) -> list:
-        """抽取文件类型参数"""
+    def _transformation_file(self, parameters: dict) -> list:
+        """
+        抽取文件类型参数
+        :param parameters  [{
+            "name": "root",
+            "in": "body",
+            "schema": {
+              "type": "object",
+              "title": "title",
+              "properties": {
+                "file": {
+                  "type": "string",
+                  "description": "上传文件"
+                }
+              },
+              "required": [
+                "file"
+              ]
+            }
+          }
+        ],
+        :return: [file1，file2...]
+        """
         files = []
         for param in parameters:
             if param['name'] == 'file':
@@ -94,12 +150,13 @@ class SwaggerGenerator:
 
     # 拼接参数列表
     def _transformation_params_list(self, params: dict, data_params: list, files: list) -> list:
-        params_name_list: list = [param['name'] for param in params]
-        params_name_list.extend(data_params)
-        params_name_list.extend(files)
-        return params_name_list
+        """
+        将不同类型的请求参数名称进行拼接
+        :return : [param1, param2, param3, param4.....]
+        """
+        return [param['name'] for param in params] + data_params + files
 
-    def _transform_url(self, path, method):
+    def _transform_url(self, path: str, method: str):
         """对url进行转换 适应restful风格"""
         path_name_list: list[str] = path.split('/')
         pat = re.compile(r'[@_!#$%^&*()<>?/\|}{~:]')
@@ -123,27 +180,27 @@ class SwaggerGenerator:
             res['name'] = path_name_list[-1].split('?')[0]
         return res
 
-    def _generate_template_path(self, swagger_paths):
+    def _generate_template_path(self, swagger_paths: dict):
         """
         对path是进行解析
         :param swagger_paths: swagger_docs 解析的path字典
         :return:
         """
-        for path, value in swagger_paths.items():
-            method_attribute = self._get_http_method(value)
-            value['method'] = method_attribute
-            value['tag'] = value[method_attribute]['tags'][0]
-            value['desc'] = value[method_attribute]['summary']
-            value['content-type'] = value[method_attribute]['consumes'][0] if value[method_attribute].get(
+        for path, path_data in swagger_paths.items():
+            method_attribute = self._get_http_method(path_data)
+            path_data['method'] = method_attribute
+            path_data['tag'] = path_data[method_attribute]['tags'][0]
+            path_data['desc'] = path_data[method_attribute]['summary']
+            path_data['content-type'] = path_data[method_attribute]['consumes'][0] if path_data[method_attribute].get(
                 'consumes') else ''
-            parameters = value[method_attribute]['parameters'] if value[method_attribute].get('parameters') else ''
-            value['parameters'] = self._transformation_parameters(parameters)
-            value['data'] = self._transformation_data(parameters)
-            value['files'] = self._transformation_file(parameters)
-            value['params_list'] = self._transformation_params_list(value['parameters'], value['data'], value['files'])
-            value.update(self._transform_url(path, method_attribute))
+            parameters = path_data[method_attribute]['parameters'] if path_data[method_attribute].get('parameters') else ''
+            path_data['parameters'] = self._transformation_parameters(parameters)
+            path_data['data'] = self._transformation_data(parameters)
+            path_data['files'] = self._transformation_file(parameters)
+            path_data['params_list'] = self._transformation_params_list(path_data['parameters'], path_data['data'], path_data['files'])
+            path_data.update(self._transform_url(path, method_attribute))
 
-    def _generate_template_data(self, swagger_data) -> dict:
+    def _generate_template_data(self, swagger_data: dict) -> dict:
         """将数据改造后存入字典"""
         tag_path_dict = {tag['name'].replace('/', '-', -1).capitalize():
                              {name: path for name, path in swagger_data['paths'].items()

@@ -12,18 +12,12 @@ import yaml
 
 
 def get_loader(filename):
-    if filename.endswith('.json'):
-        loader = json.load
-    elif filename.endswith('.yml') or filename.endswith('.yaml'):
-        loader = yaml.load
+    if filename.endswith(('.json', '.yml', '.yaml')):
+        loader = json.load if filename.endswith('.json') else yaml.load
     else:
         with open(filename, 'r', 'utf-8') as f:
-            contents = f.read()
-            contents = contents.strip()
-            if contents[0] in ['{', '[']:
-                loader = json.load
-            else:
-                loader = yaml.load
+            contents = f.read().strip()
+            loader = json.load if contents[0] in ['{', '['] else yaml.load
     return loader
 
 
@@ -45,23 +39,15 @@ def get_ref_filepath(filename, ref_file):
 def load_file(filename, spec_data):
     loader = get_loader(filename)
     with open(filename, 'r', encoding='utf-8') as f:
-        if filename.endswith('.json'):
-            data = loader(f)
-        else:
-            data = loader(f, yaml.Loader)
-        # modify_spec_data(spec_data, data)
+        data = loader(f) if filename.endswith('.json') else loader(f, yaml.Loader)
         spec_data.update(data)
         for field, values in six.iteritems(data):
-            if field not in ['definitions', 'parameters', 'paths']:
-                continue
-            if not isinstance(values, dict):
+            if field not in ['definitions', 'parameters', 'paths'] or not isinstance(values, dict):
                 continue
             for _field, value in six.iteritems(values):
-                # _field is the endpoint for paths when the api of paths contains $ref
                 if _field == '$ref' and value.endswith('.yml'):
                     _filepath = get_ref_filepath(filename, value)
                     field_data = load_swagger(_filepath)
-                    # modify_spec_data(field, spec_data, field_data)
                     spec_data[field] = field_data
                 elif '$ref' in value:
                     v = value.pop('$ref', '')
