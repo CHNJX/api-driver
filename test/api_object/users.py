@@ -2,7 +2,7 @@ from api_object.http import Http
 
 
 class Users(Http):
-
+    base_url = "https://www.baodu.com"
     def users(self):
         """
         Get a list of users"""

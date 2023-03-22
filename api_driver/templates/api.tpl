@@ -18,29 +18,41 @@ class {{ tag }}(Http):
         :param {{param_name}}:
         {%- if loop.last %}
         {% endif %}
-        {%- endfor -%}
+        {%- endfor %}
         """
 
         req_data = {
             "url": {% if path["url_param"] %}f"{{path["url"]}}/{ {{path["url_param"]}} }"{% else %}f"{{key}}"{% endif %},
+            {%- if path["parameters"] %}
             "params": {
                 {%- for param in path["parameters"] %}
                 "{{param["name"]}}": {{param["name"]}}{%- if not loop.last %},{% else %}
                 {% endif %}
                 {%- endfor -%}
             },
-            "json": {
-                {%- for param_name in path["json"] %}
+            {% endif -%}
+            {%- if path["data"] %}
+            "data": {
+                {%- for param_name in path["data"] %}
                 "{{param_name}}": {{param_name}}{%- if not loop.last %},{% else %}
                 {% endif %}
                 {%- endfor -%}
             },
-            "files": {
+            {% endif -%}
+            {%- if path["files"] %}
+            "files": [
                 {%- for file_name in path["files"] %}
-                "{{file_name}}": open({{file_name}}, "rb"),{%- if not loop.last %},{% else %}
+                ('{{file_name}}', (file.split('/')[-1] if '/' in file else file.split('\\')[-1],
+                          open({{file_name}}, 'rb'),
+                          'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'))
+                {%- if not loop.last %},{% else %}
                 {% endif %}
                 {%- endfor -%}
-            }
+            ],
+            {% endif -%}
+            {%- if path["content-type"] %}
+            "headers": {"content-type": "{{path["content-type"]}}"}
+            {% endif -%}
         }
         return self.req(method="{{path["method"]}}", **req_data)
 

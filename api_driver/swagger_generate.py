@@ -16,6 +16,7 @@ from api_driver import ad_utils
 
 
 class SwaggerGenerator:
+    swagger_data = None
 
     def generate(self, swagger_doc, api_dir=None):
         """
@@ -28,9 +29,9 @@ class SwaggerGenerator:
             api_dir = 'api_object'
         if '/' not in swagger_doc and '\\' not in swagger_doc:
             swagger_doc = 'swagger/' + swagger_doc
-        swagger_data = load_swagger(swagger_doc)
-        self._generate_template_path(swagger_data['paths'])
-        tag_path_dict = self._generate_template_data(swagger_data)
+        self.swagger_data = load_swagger(swagger_doc)
+        self._generate_template_path(self.swagger_data['paths'])
+        tag_path_dict = self._generate_template_data(self.swagger_data)
         template = Template()
         for tag, paths in tag_path_dict.items():
             content = template.get_content('api.tpl', tag=tag, paths=paths)
@@ -43,41 +44,59 @@ class SwaggerGenerator:
         :param value: get:{} or post:{} or put:{} ...
         :return: request method: get/post/put/delete...
         """
-        attribute = ''
-        if value.get('get'):
-            attribute = 'get'
-        elif value.get('post'):
-            attribute = 'post'
-        elif value.get('put'):
-            attribute = 'put'
-        elif value.get('delete'):
-            attribute = 'delete'
-        return attribute
+        method_map = {
+            'get': 'get',
+            'post': 'post',
+            'put': 'put',
+            'delete': 'delete'
+        }
+        for method, attribute in method_map.items():
+            if value.get(method):
+                return attribute
+        return ''
 
     def _transformation_parameters(self, parameters) -> list:
         """
         parameters dict => parameters list
         """
         return [param for param in parameters if
-                param['name'] != 'raw' and param['name'] != 'root' and param['in'] != 'header']
+                param['name'] not in ('raw', 'root') and param['in'] == 'query']
 
     # 转换json参数
-    def _transformation_json(self, parameters) -> list:
+    def _transformation_data(self, parameters) -> list:
         """
         将json参数装换成json参数名称列表
         :return: [param1，param2...]
         """
-        json_list = []
+        data_list = []
         for param in parameters:
-            if param.get('schema') and param['schema'].get('properties'):
-                for key_name in param['schema']['properties'].keys():
-                    json_list.append(key_name)
-        return json_list
+            if param.get('schema'):
+                if param['schema'].get('properties'):
+                    data_list.extend(param['schema']['properties'].keys())
+                elif param['schema'].get('$ref'):
+                    data_ref: str = param['schema'].get('$ref')
+                    data_link = data_ref.split('/')[-1]
+                    data_list.extend(self.swagger_data['definitions'][data_link]['properties'].keys())
+
+        return data_list
+
+    def _transformation_file(self, parameters) -> list:
+        """抽取文件类型参数"""
+        files = []
+        for param in parameters:
+            if param['name'] == 'file':
+                files.append(param['name'])
+            elif param.get('schema'):
+                if param['schema'].get('properties'):
+                    if 'file' in param['schema']['properties'].keys():
+                        files.append(param['name'])
+        return files
 
     # 拼接参数列表
-    def _transformation_params_list(self, params, json_params: list) -> list:
+    def _transformation_params_list(self, params: dict, data_params: list, files: list) -> list:
         params_name_list: list = [param['name'] for param in params]
-        params_name_list.extend(json_params)
+        params_name_list.extend(data_params)
+        params_name_list.extend(files)
         return params_name_list
 
     def _transform_url(self, path, method):
@@ -88,13 +107,14 @@ class SwaggerGenerator:
         if 'id' in path_name_list[-1].lower() or pat.search(path_name_list[-1]):
             res['url_param'] = re.sub('[\W_]+', '', path_name_list[-1])
             if method == 'get':
-                res['name'] = 'detail'
+                res['name'] = '_get'
             elif method == 'post':
-                res['name'] = 'add'
+                res['name'] = '_post'
             elif method == 'put':
-                res['name'] = 'update'
+                res['name'] = '_put'
             elif method == 'delete':
-                res['name'] = 'delete'
+                res['name'] = '_delete'
+            res['name'] = path_name_list[-2] + res['name']
             path_name_list.pop(-1)
             res['url'] = '/'.join(path_name_list)
         else:
@@ -102,10 +122,6 @@ class SwaggerGenerator:
             res['url'] = path
             res['name'] = path_name_list[-1].split('?')[0]
         return res
-
-    def _transformation_file(self, json_params) -> list:
-        """抽取文件类型参数"""
-        return [param for param in json_params if 'file' in param]
 
     def _generate_template_path(self, swagger_paths):
         """
@@ -118,11 +134,13 @@ class SwaggerGenerator:
             value['method'] = method_attribute
             value['tag'] = value[method_attribute]['tags'][0]
             value['desc'] = value[method_attribute]['summary']
+            value['content-type'] = value[method_attribute]['consumes'][0] if value[method_attribute].get(
+                'consumes') else ''
             parameters = value[method_attribute]['parameters'] if value[method_attribute].get('parameters') else ''
             value['parameters'] = self._transformation_parameters(parameters)
-            value['json'] = self._transformation_json(parameters)
-            value['files'] = self._transformation_file(value['json'])
-            value['params_list'] = self._transformation_params_list(value['parameters'], value['json'])
+            value['data'] = self._transformation_data(parameters)
+            value['files'] = self._transformation_file(parameters)
+            value['params_list'] = self._transformation_params_list(value['parameters'], value['data'], value['files'])
             value.update(self._transform_url(path, method_attribute))
 
     def _generate_template_data(self, swagger_data) -> dict:
