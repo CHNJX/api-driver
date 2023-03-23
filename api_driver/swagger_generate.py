@@ -11,7 +11,7 @@ from os.path import dirname, exists, join
 sys.path.append(dirname(sys.path[0]))
 
 from api_driver.loader_swagger import load_swagger
-from api_driver.tenplate import Template
+from api_driver.template import Template
 from api_driver import ad_utils
 
 

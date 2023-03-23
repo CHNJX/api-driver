@@ -1,7 +1,7 @@
 # -*- coding:utf-8 -*-
 # @Time     :2023/2/7 12:45
 # @Author   :CHNJX
-# @File     :tenplate.py
+# @File     :template.py
 # @Desc     :模板工具类
 import os
 

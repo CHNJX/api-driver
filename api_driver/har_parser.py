@@ -12,7 +12,7 @@ import sys
 from json import JSONDecodeError
 from urllib.parse import urlparse
 
-from api_driver.tenplate import Template
+from api_driver.template import Template
 from api_driver import ad_utils
 
 # 忽略的请求头
