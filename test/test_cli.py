@@ -13,7 +13,7 @@ class TestCommand:
         assert os.path.isdir(os.path.join('new_project', "testcase"))
 
     def test_swagger_generate(self):
-        SwaggerGenerator().generate(join(dirname(__file__), 'swagger/platform.json'),
+        SwaggerGenerator().generate(join(dirname(__file__), 'swagger/swagger.json'),
                                     join(dirname(__file__), 'api_object'))
         assert os.path.exists(os.path.join(dirname(__file__) + "/api_object", "users.py"))
 

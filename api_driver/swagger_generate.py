@@ -14,13 +14,13 @@ from api_driver.loader_swagger import load_swagger
 from api_driver.template import Template
 from api_driver import ad_utils
 
-
 HTTP_METHODS = {
-            'get': 'get',
-            'post': 'post',
-            'put': 'put',
-            'delete': 'delete'
-        }
+    'get': 'get',
+    'post': 'post',
+    'put': 'put',
+    'delete': 'delete'
+}
+
 
 class SwaggerGenerator:
     swagger_data = None
@@ -149,12 +149,21 @@ class SwaggerGenerator:
         return files
 
     # 拼接参数列表
-    def _transformation_params_list(self, params: dict, data_params: list, files: list) -> list:
+    def _transformation_params_list(self, params: dict, data_params: list, files: list, url_params: str) -> list:
         """
         将不同类型的请求参数名称进行拼接
         :return : [param1, param2, param3, param4.....]
         """
-        return [param['name'] for param in params] + data_params + files
+        params_list = []
+        if params:
+            params_list.extend([param['name'] for param in params])
+        if data_params:
+            params_list = params_list + data_params
+        if files:
+            params_list = params_list + files
+        if url_params:
+            params_list.append(url_params)
+        return params_list
 
     def _transform_url(self, path: str, method: str):
         """对url进行转换 适应restful风格"""
@@ -193,12 +202,14 @@ class SwaggerGenerator:
             path_data['desc'] = path_data[method_attribute]['summary']
             path_data['content-type'] = path_data[method_attribute]['consumes'][0] if path_data[method_attribute].get(
                 'consumes') else ''
-            parameters = path_data[method_attribute]['parameters'] if path_data[method_attribute].get('parameters') else ''
+            parameters = path_data[method_attribute]['parameters'] if path_data[method_attribute].get(
+                'parameters') else ''
             path_data['parameters'] = self._transformation_parameters(parameters)
             path_data['data'] = self._transformation_data(parameters)
             path_data['files'] = self._transformation_file(parameters)
-            path_data['params_list'] = self._transformation_params_list(path_data['parameters'], path_data['data'], path_data['files'])
             path_data.update(self._transform_url(path, method_attribute))
+            path_data['params_list'] = self._transformation_params_list(path_data['parameters'], path_data['data'],
+                                                                        path_data['files'], path_data['url_param'])
 
     def _generate_template_data(self, swagger_data: dict) -> dict:
         """将数据改造后存入字典"""
