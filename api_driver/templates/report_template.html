@@ -479,6 +479,7 @@ function filterTable(elem) { // eslint-disable-line no-unused-vars
         onChange="filterTable(this)" type="checkbox"/><span class="xpassed">0 unexpected passes</span>
 <h2>Results</h2>
 <table id="results-table">
+
     <thead id="results-table-head">
     <tr>
         <th class="sortable result initial-sort" col="result">Test Model</th>
@@ -503,7 +504,12 @@ function filterTable(elem) { // eslint-disable-line no-unused-vars
     </tr>
     <tr>
         <td class="extra" colspan="4">
-            <div class="log">{{ test.details }}</div>
+                <!-- 折叠面板开始 -->
+                <details>
+                    <summary>Show Log</summary>
+                    <pre>{{ test.logs }}</pre>
+                </details>
+                <!-- 折叠面板结束 -->
         </td>
     </tr>
     </tbody>

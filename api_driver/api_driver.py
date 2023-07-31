@@ -3,6 +3,7 @@
 # @Author   :CHNJX
 # @File     :api_driver.py
 # @Desc     :
+import logging
 import subprocess
 import time
 from datetime import datetime
@@ -52,11 +53,18 @@ class TestResultPlugin:
                 'details': str(report.longrepr),
             }
 
+            # 获取测试用例方法的日志信息
+            logs = report.caplog if hasattr(report, 'caplog') else None
+            # 将测试用例方法的日志添加到results中
+            result['logs'] = logs
+
             if test_suite not in self.results:
                 self.results[test_suite] = {}
             if test_class not in self.results[test_suite]:
                 self.results[test_suite][test_class] = []
             self.results[test_suite][test_class].append(result)
+
+
 
     def get_results(self) -> dict:
         return {
@@ -70,6 +78,12 @@ class TestResultPlugin:
 
 
 class ApiDriver:
+
+    def __init__(self):
+        self.setup_logging()
+
+    def setup_logging(self):
+        logging.basicConfig(level=logging.INFO)
 
     def run_tests(self, testcases: str, report_file: str = None):
         plugin = TestResultPlugin()
