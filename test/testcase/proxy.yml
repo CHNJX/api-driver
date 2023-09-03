@@ -1,0 +1,31 @@
+base_config:
+  base_host: www.baidu.com
+
+mock:
+  - name: first
+
+    request:
+      filters:
+        - selenium
+        - appium
+
+      response_mock:
+        status_code: 200
+        body: hello
+        headers: { "Content-Type": "text/html" }
+#
+#    response:
+#      url: cmsapi-test.ienjoys.com
+#      filters:
+#        - getUserInfo
+#      replace:
+#        - $..data.real_name: '小陈'
+#        - $..data.is_group_admin: '2'
+
+  - name: second
+    request:
+      request_headers:
+        User-Agent: "Custom User Agent"
+      url: cmsapi-test.ienjoys.com
+      filters:
+        - getUserInfo
