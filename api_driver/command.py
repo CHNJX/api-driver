@@ -49,13 +49,14 @@ def swagger2api(swagger_doc, api_dir):
               required=False, help='testcase')
 @click.option('-r', '--reset', help='auto clear report', required=False, default='false',
               type=click.Choice(['true', 'false']))
-def run(testcase, tag, reset):
+@click.option('-t','--threads', help='run with multiple threads', required=False)
+def run(testcase, tag, reset, threads):
     """
     运行用例并集成allure报告
+    :param threads: 运行的线程数
     :param testcase: 用例路径
     :param tag: 用例标签
     :param reset: 是否重置allure报告
-    :return: 
     """""
     command = f'pytest -v -s {testcase}'
     if reset == 'true':
@@ -63,8 +64,11 @@ def run(testcase, tag, reset):
             subprocess.call(f'rmdir /Q /S allure-results', shell=True)
         else:
             subprocess.call(f'rmdir -rf allure-results', shell=True)
+    if threads:
+        command += f' -n {threads}'
     if tag:
         command += f' -m {tag}'
+
     subprocess.call(command + ' --alluredir=./allure-results', shell=True)
 
 

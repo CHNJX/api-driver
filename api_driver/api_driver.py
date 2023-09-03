@@ -64,8 +64,6 @@ class TestResultPlugin:
                 self.results[test_suite][test_class] = []
             self.results[test_suite][test_class].append(result)
 
-
-
     def get_results(self) -> dict:
         return {
             'test_count': self.test_count,
@@ -85,10 +83,20 @@ class ApiDriver:
     def setup_logging(self):
         logging.basicConfig(level=logging.INFO)
 
-    def run_tests(self, testcases: str, report_file: str = None):
+    def run_tests(self, testcases: str, report_file: str = None, thread_num: int = 0):
+        """
+        运行测试用例
+        :param testcases: 测试用例路径
+        :param report_file: 报告存在路径
+        :param thread_num: 使用线程数
+        :return:
+        """
         plugin = TestResultPlugin()
         start_time = time.time()
-        pytest.main([testcases, '-v', '-s'], plugins=[plugin])
+        if thread_num:
+            pytest.main([testcases, '-v', '-s', 'n', f'{thread_num}'], plugins=[plugin])
+        else:
+            pytest.main([testcases, '-v', '-s'], plugins=[plugin])
         end_time = time.time()
         execution_time = "{:.2f}s".format(end_time - start_time)
         res = plugin.get_results()
