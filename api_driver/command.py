@@ -49,7 +49,7 @@ def swagger2api(swagger_doc, api_dir):
               required=False, help='testcase')
 @click.option('-r', '--reset', help='auto clear report', required=False, default='false',
               type=click.Choice(['true', 'false']))
-@click.option('-t','--threads', help='run with multiple threads', required=False)
+@click.option('-t', '--threads', help='run with multiple threads', required=False)
 def run(testcase, tag, reset, threads):
     """
     运行用例并集成allure报告
@@ -92,10 +92,37 @@ def har2case(har, api, testcase, exclude):
     hp.generate_testcase(testcase_path=testcase)
 
 
+@click.command('catch2case')
+@click.option('-fh', '--host', help="filter host", required=True)
+@click.option('-fp', '--path', help="filter path", required=False, default='')
+@click.option('-l', '--port', help="listening port", required=False, default='8888')
+@click.option('-h', '--har',
+              required=False, help='har file path')
+@click.option('-a', '--api',
+              required=False, help='api object dir', default=None)
+@click.option('-t', '--testcase', help='testcase dir', required=False, default='testcase')
+@click.option('-e', '--exclude', help='exclude url', required=False, default='')
+def catch2case(host, path, port, har, api, testcase, exclude):
+    # 直接调用命令行
+    script_path = "api_driver/catch_2_testcase.py"
+    subprocess.run(
+        ["mitmproxy", "-s", f"{dirname(__file__)}/catch_2_testcase.py",
+         "--set", f'host={host}',
+         "--set", f'path={path}',
+         "--set", f'har={har}',
+         "--set", f'api={api}',
+         "--set", f'testcase_path={testcase}',
+         "--set", f'exclude={exclude}',
+         "-p", port
+         ],
+        shell=True)
+
+
 group.add_command(start_project)
 group.add_command(swagger2api)
 group.add_command(run)
 group.add_command(har2case)
+group.add_command(catch2case)
 
 
 def cmd():
