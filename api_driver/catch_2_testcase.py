@@ -118,6 +118,9 @@ class ExportFilter:
         api = ctx.options.api if ctx.options.api else None
         exclude = ctx.options.exclude if ctx.options.exclude else ''
         try:
+            print(testcase_path)
+            print(api)
+            print(exclude)
             hp = HarParser(har_file_path='filtered_requests.har', api_object=api, exclude_url=exclude)
             hp.generate_testcase(testcase_path=testcase_path)
         except Exception as e:

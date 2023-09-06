@@ -1,15 +1,13 @@
 # -*- coding:utf-8 -*-
 # @Time     :2023/7/10 15:04
 # @Author   :CHNJX
-# @File     :api_driver.py
+# @File     :adf.py
 # @Desc     :
 import logging
-import subprocess
 import time
 from datetime import datetime
 
 import pytest
-from jinja2 import Environment, FileSystemLoader
 
 from api_driver.template import Template
 

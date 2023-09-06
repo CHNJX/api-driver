@@ -3,6 +3,7 @@
 # @Author   :CHNJX
 # @File     :command.py
 # @Desc     :命令工具
+import os
 import subprocess
 import sys
 from os.path import dirname, exists
@@ -103,8 +104,8 @@ def har2case(har, api, testcase, exclude):
 @click.option('-t', '--testcase', help='testcase dir', required=False, default='testcase')
 @click.option('-e', '--exclude', help='exclude url', required=False, default='')
 def catch2case(host, path, port, har, api, testcase, exclude):
+    os.environ["MITMPROXY_DEBUG"] = "1"
     # 直接调用命令行
-    script_path = "api_driver/catch_2_testcase.py"
     subprocess.run(
         ["mitmproxy", "-s", f"{dirname(__file__)}/catch_2_testcase.py",
          "--set", f'host={host}',
