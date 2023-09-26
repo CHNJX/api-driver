@@ -105,6 +105,18 @@ def har2case(har, api, testcase, exclude):
 @click.option('-t', '--testcase', help='testcase dir', required=False, default='testcase')
 @click.option('-e', '--exclude', help='exclude url', required=False, default='')
 def capture2testcase(name, host, path, port, har, api, testcase, exclude):
+    """
+    抓取网络数据包并生成测试用例
+    :param name: 测试用例名称
+    :param host: 抓取的域名
+    :param path: 抓取的路径
+    :param port: 监听的端口
+    :param har: 对应har文件名称
+    :param api: 对应api-object路径
+    :param testcase: 测试用例存放路径
+    :param exclude: 剔除的url
+    :return:
+    """
     script_path = os.path.abspath(os.path.join(os.path.dirname(__file__), 'capture2testcase.py'))
     # 构建 mitmproxy 命令
     mitmproxy_command = [

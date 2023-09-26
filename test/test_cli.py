@@ -23,3 +23,11 @@ class TestCommand:
         har = HarParser(har_file_path=har_file)
         har.generate_testcase(testcase_path=testcase_dir)
         assert os.path.exists(os.path.join(dirname(__file__) + "/testcase", "test_demo.py"))
+
+    def test_har2api_case(self):
+        har_file = r'D:\PycharmProjects\adf-demo\har\contract.har'
+        testcase_dir = r'D:\PycharmProjects\adf-demo\testcase'
+        api_object = r'D:\PycharmProjects\adf-demo\api_object\contract.py'
+        hp = HarParser(har_file_path=har_file, api_object=api_object)
+        hp.generate_testcase(testcase_path=testcase_dir)
+

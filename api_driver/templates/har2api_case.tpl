@@ -26,6 +26,9 @@ class Test{{model_name}}(TestBase):
         {%- if step['request']['json'] %}
         request_data.update({{step['request']['json']}})
         {% endif %}
+        {%- if step['request']['headers'] %}
+        request_data['headers'] = {{step['request']['headers']}}
+        {% endif %}
         resp = {{step['api_class']}}().{{step['func_name']}}(**request_data)
         {% else %}
         req_data = {
